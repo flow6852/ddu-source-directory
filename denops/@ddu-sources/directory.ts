@@ -45,7 +45,7 @@ export class Source extends BaseSource<Params> {
 async function collectDirs(dir: string, signal: AbortSignal, expandSymbolicLink: boolean) {
   const items: Item[] = [];
   items.push({
-    word: "..",
+    word: "../",
     action: {
       path: join(dir, ".."),
     },
@@ -63,7 +63,7 @@ async function collectDirs(dir: string, signal: AbortSignal, expandSymbolicLink:
 
     if (stat.isDirectory) {
       items.push({
-        word: join(item.name),
+        word: join(item.name, "/"),
         action: {
           path: join(dir, item.name),
         },
