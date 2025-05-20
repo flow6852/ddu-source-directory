@@ -44,12 +44,6 @@ export class Source extends BaseSource<Params> {
 
 async function collectDirs(dir: string, signal: AbortSignal, expandSymbolicLink: boolean) {
   const items: Item[] = [];
-  items.push({
-    word: "../",
-    action: {
-      path: join(dir, ".."),
-    },
-  });
 
   for await (
     const item of (abortable(Deno.readDir(dir), signal))
@@ -70,6 +64,20 @@ async function collectDirs(dir: string, signal: AbortSignal, expandSymbolicLink:
       });
     }
   }
+
+  items.push({
+    word: "../",
+    action: {
+      path: join(dir, ".."),
+    },
+  });
+
+  items.push({
+    word: "\$HOME/",
+    action: {
+      path: Deno.env.get("HOME"),
+    },
+  });
   return items;
 }
 
