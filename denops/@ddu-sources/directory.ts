@@ -12,6 +12,7 @@ import { treePath2Filename } from "jsr:@shougo/ddu-vim@~6.1.0/utils";
 
 type Params = {
   expandSymbolicLink: boolean;
+  globalDirs: Item[];
 }
 
 export class Source extends BaseSource<Params> {
@@ -29,7 +30,7 @@ export class Source extends BaseSource<Params> {
         const root = treePath2Filename(
           args.sourceOptions.path.length != 0 ? args.sourceOptions.path : args.context.path,
         );
-        controller.enqueue(await collectDirs(resolve(root), abortController.signal, args.sourceParams.expandSymbolicLink));
+        controller.enqueue(await collectDirs(resolve(root), abortController.signal, args.sourceParams.expandSymbolicLink, args.sourceParams.globalDirs));
         controller.close();
       },
     });
@@ -38,11 +39,12 @@ export class Source extends BaseSource<Params> {
   override params(): Params {
     return {
       expandSymbolicLink: false,
+      globalDirs: []
     };
   }
 }
 
-async function collectDirs(dir: string, signal: AbortSignal, expandSymbolicLink: boolean) {
+async function collectDirs(dir: string, signal: AbortSignal, expandSymbolicLink: boolean, globalDirs: Item[]) {
   const items: Item[] = [];
 
   for await (
@@ -65,19 +67,9 @@ async function collectDirs(dir: string, signal: AbortSignal, expandSymbolicLink:
     }
   }
 
-  items.push({
-    word: "../",
-    action: {
-      path: join(dir, ".."),
-    },
-  });
-
-  items.push({
-    word: "\$HOME/",
-    action: {
-      path: Deno.env.get("HOME"),
-    },
-  });
+  for (const i of globalDirs){
+    items.push(i);
+  }
   return items;
 }
 
