@@ -1,8 +1,8 @@
 import {
   BaseSource,
+  Context,
   Item,
   SourceOptions,
-  Context,
 } from "https://deno.land/x/ddu_vim@v3.10.1/types.ts";
 import { Denops } from "https://deno.land/x/ddu_vim@v3.10.1/deps.ts";
 import { join } from "jsr:@std/path@~1.0.3/join";
@@ -13,7 +13,7 @@ import { treePath2Filename } from "jsr:@shougo/ddu-vim@~6.1.0/utils";
 type Params = {
   expandSymbolicLink: boolean;
   globalDirs: Item[];
-}
+};
 
 export class Source extends BaseSource<Params> {
   override kind = "directory";
@@ -28,9 +28,18 @@ export class Source extends BaseSource<Params> {
     return new ReadableStream<Item[]>({
       async start(controller) {
         const root = treePath2Filename(
-          args.sourceOptions.path.length != 0 ? args.sourceOptions.path : args.context.path,
+          args.sourceOptions.path.length != 0
+            ? args.sourceOptions.path
+            : args.context.path,
         );
-        controller.enqueue(await collectDirs(resolve(root), abortController.signal, args.sourceParams.expandSymbolicLink, args.sourceParams.globalDirs));
+        controller.enqueue(
+          await collectDirs(
+            resolve(root),
+            abortController.signal,
+            args.sourceParams.expandSymbolicLink,
+            args.sourceParams.globalDirs,
+          ),
+        );
         controller.close();
       },
     });
@@ -39,12 +48,17 @@ export class Source extends BaseSource<Params> {
   override params(): Params {
     return {
       expandSymbolicLink: false,
-      globalDirs: []
+      globalDirs: [],
     };
   }
 }
 
-async function collectDirs(dir: string, signal: AbortSignal, expandSymbolicLink: boolean, globalDirs: Item[]) {
+async function collectDirs(
+  dir: string,
+  signal: AbortSignal,
+  expandSymbolicLink: boolean,
+  globalDirs: Item[],
+) {
   const items: Item[] = [];
 
   for await (
@@ -67,9 +81,17 @@ async function collectDirs(dir: string, signal: AbortSignal, expandSymbolicLink:
     }
   }
 
-  for (const i of globalDirs){
+  for (const i of globalDirs) {
     items.push(i);
   }
+
+  items.push({
+    word: "../",
+    action: {
+      path: join(dir, ".."),
+    },
+  });
+
   return items;
 }
 
